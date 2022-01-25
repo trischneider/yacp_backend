@@ -19,8 +19,8 @@ export function initModels(sequelize: Sequelize){
     chat.hasMany(chatUser, {foreignKey: 'chat_id'});
     chatUser.belongsTo(chat, {foreignKey: 'chat_id'});
 
-    message.hasMany(user, {foreignKey: 'user_id'});
-    user.belongsTo(message, {foreignKey: 'user_id'});
+    user.hasMany(message, {foreignKey: 'user_id'});
+    message.belongsTo(user, {foreignKey: 'user_id'});
 
     sequelize.sync().then(() => console.log("successfully connected to database"))
 }

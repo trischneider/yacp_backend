@@ -1,9 +1,12 @@
-import { Model, Sequelize, ModelStatic, DataTypes } from "sequelize";
+import { Model, Sequelize, ModelStatic, DataTypes, HasManyGetAssociationsMixin } from "sequelize";
+import { Chat } from "./chat";
 
 export class ChatUser extends Model {
-    public chat_id!: number;
-    public user_id!: number;
-    public is_admin!: boolean;
+    declare chat_id: number;
+    declare user_id: number;
+    declare is_admin: boolean;
+
+    declare getChats: HasManyGetAssociationsMixin<Chat>;
 }
 
 export function define(sequelize: Sequelize): ModelStatic<ChatUser> {
@@ -22,5 +25,5 @@ export function define(sequelize: Sequelize): ModelStatic<ChatUser> {
             type: DataTypes.BOOLEAN,
             defaultValue: false,
         },
-    }, {sequelize});
+    }, {sequelize, modelName: 'chatuser'});
 }

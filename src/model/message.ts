@@ -1,11 +1,11 @@
 import { Model, Sequelize, ModelStatic, DataTypes } from "sequelize";
 
 export class Message extends Model {
-    public id!: number;
-    public chat_id!: number;
-    public user_id!: number;
-    public content!: string;
-    public created_at!: Date;
+    declare id: number;
+    declare chat_id: number;
+    declare user_id: number;
+    declare content: string;
+    declare created_at: Date;
 }
 export function define(sequelize: Sequelize): ModelStatic<Message> {
     return Message.init({
