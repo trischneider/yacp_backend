@@ -10,7 +10,6 @@ export default class Server {
     constructor(){
         this.app = express();
         this.app.use(json());
-        registerRoutes(this.app);
     }
 
     public async listen(){
@@ -21,6 +20,7 @@ export default class Server {
         try{
             await sequelize.authenticate();
             initModels(sequelize);
+            registerRoutes(this.app, sequelize);
             this.app.listen(process.env.PORT, () => {
                 console.log(`Listening on port ${process.env.PORT}...`);
             });

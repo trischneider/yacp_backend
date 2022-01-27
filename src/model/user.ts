@@ -1,17 +1,19 @@
-import { DataTypes, HasManyGetAssociationsMixin, Model, ModelStatic, Sequelize, StringDataType } from "sequelize";
+import { DataTypes, HasManyGetAssociationsMixin, HasOneCreateAssociationMixin, Model, ModelStatic, Sequelize, StringDataType } from "sequelize";
 import { ChatUser } from "./chat_user";
+import { Message } from "./message";
 
 export class User extends Model {
-    public id!: string;
-    public username!: string;
-    public password!: string;
-    public email!: string;
-    public first_name!: string;
-    public last_name!: string;
-    public token!: string;
-    public refresh_token!: string;
+    declare id: string;
+    declare username: string;
+    declare password: string;
+    declare email: string;
+    declare first_name: string;
+    declare last_name: string;
+    declare token: string;
+    declare refresh_token: string;
 
-    public getChatUsers!: HasManyGetAssociationsMixin<ChatUser>; 
+    declare getChatUsers: HasManyGetAssociationsMixin<ChatUser>; 
+    declare createMessage: HasOneCreateAssociationMixin<Message>;
 }
 export function define(sequelize: Sequelize): ModelStatic<User>{
     return User.init({

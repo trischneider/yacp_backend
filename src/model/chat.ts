@@ -14,4 +14,4 @@ export function define(sequelize: Sequelize): ModelStatic<Chat> {
         },
         name: DataTypes.STRING,
     }, {sequelize})
-}
+} 
