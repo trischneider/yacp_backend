@@ -1,5 +1,6 @@
-import BaseRoute, {minLength, requireKeysOfType, mail, typeCheck, nonNull, CustomRequest, requireRefreshTokenAuthorization, num} from "./base_router";
+import BaseRoute, {minLength, requireKeysOfType, mail, typeCheck, nonNull, CustomRequest, requireRefreshTokenAuthorization, num, requireAuthorization} from "./base_router";
 import { Express, Request, Response } from "express";
+import { Op } from "sequelize";
 import { User } from "../model/user";
 import * as bcrypt from "bcrypt";
 import * as jwt from "jsonwebtoken";
@@ -8,8 +9,8 @@ const userCreationTypes =  {
     username: typeCheck(minLength(3)),
     password: typeCheck(minLength(6)),
     email: typeCheck(mail()),
-    first_name: typeCheck(minLength(2)),
-    last_name: typeCheck(minLength(2))
+    first_name: typeCheck(minLength(1)),
+    last_name: typeCheck(minLength(1))
 }
 interface userCreationBodyParams {
     username: string;
@@ -22,7 +23,6 @@ interface userCreationBodyParams {
 export class UserRouter extends BaseRoute {
     constructor(app: Express){
         super(app);
-  
     }
   
     protected init(): void {
@@ -36,6 +36,9 @@ export class UserRouter extends BaseRoute {
             password: typeCheck(nonNull())
         }), this.loginUser);
         this.app.post("/api/user/refresh", requireRefreshTokenAuthorization, this.refreshToken);
+        this.app.get("/api/user/search/:searchTerm", requireAuthorization, requireKeysOfType({
+            searchTerm: typeCheck(minLength(1))
+        }, true), this.searchUser)
     }
     private generateToken(username: string){
         const token = jwt.sign({username}, process.env.TOKEN_KEY, {expiresIn: "5h"});
@@ -44,10 +47,14 @@ export class UserRouter extends BaseRoute {
     }
     private async createUser(req: Request<{}, {}, userCreationBodyParams>, res: Response ){
         const hash = await bcrypt.hash(req.body.password, 10);
-        const oldUser = await User.findOne({where: {username: req.body.username}});
-
+        const oldUser = await User.findOne({where: {
+            [Op.or]: [
+                {username: req.body.username},
+                {email: req.body.email}
+            ]
+        }}); 
         if(oldUser){
-            return res.status(400).send("Username already exists");
+            return res.status(400).send("User already exists");
         }
         const {token, refreshToken} = this.generateToken(req.body.username);
 
@@ -87,6 +94,16 @@ export class UserRouter extends BaseRoute {
         const token = jwt.sign({username: user.username}, process.env.TOKEN_KEY, {expiresIn: "5h"});
         await user.update({token});
         res.send({token});
+    }
+    private async searchUser(req: CustomRequest<{searchTerm: string}, {}, {}>, res: Response){
+        const users = await User.findAll({
+            where: {
+                username: {[Op.like]: `%${req.params.searchTerm}%`}
+            },
+            attributes: ["username", "id"],
+            limit: 20,
+        });
+        res.send(users);
     }
 
 }

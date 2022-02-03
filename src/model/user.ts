@@ -3,7 +3,7 @@ import { ChatUser } from "./chat_user";
 import { Message } from "./message";
 
 export class User extends Model {
-    declare id: string;
+    declare id: number;
     declare username: string;
     declare password: string;
     declare email: string;

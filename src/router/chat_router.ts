@@ -11,11 +11,14 @@ const getQuery = `SELECT id, name, last_message_date, last_message_user, content
 AS Message ON Message.chat_id = ChatUser.chat_id WHERE ChatUser.user_id = ?;
 `
 export class ChatRouter extends BaseRouter {
+
     private sequelize: Sequelize;
+
     constructor(app: Express, sequelize: Sequelize) {
         super(app);
         this.sequelize = sequelize;
     }
+
     protected init(): void {
         this.createChat = this.createChat.bind(this);
         this.getChats = this.getChats.bind(this);
@@ -31,7 +34,8 @@ export class ChatRouter extends BaseRouter {
             chat_id: typeCheck(num())
         }), this.deleteChat);
     }
-    private async createChat(req: CustomRequest<{}, {}, {user_ids: string[], is_group: number, admin_user_ids: string[], name: string}>, res: Response) {
+
+    private async createChat(req: CustomRequest<{}, {}, {user_ids: number[], is_group: number, admin_user_ids: number[], name: string}>, res: Response) {
         if(req.body.user_ids.length === 0)
             return res.status(400).send("No users provided");
         if(req.body.is_group && (req.body.admin_user_ids.length !== 0 || req.body.user_ids.length > 1))
@@ -52,6 +56,7 @@ export class ChatRouter extends BaseRouter {
         else
             res.status(500).send("Failed to create chat");
     }
+    
     private async getChats(req: CustomRequest<{}, {}, {}>, res: Response) {
         const results = await this.sequelize.query(getQuery, {
             replacements: [req.user.id],

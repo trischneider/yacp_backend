@@ -5,7 +5,7 @@ export class Message extends Model {
     declare chat_id: number;
     declare user_id: number;
     declare content: string;
-    declare created_at: Date;
+    declare createdAt: Date;
 }
 export function define(sequelize: Sequelize): ModelStatic<Message> {
     return Message.init({

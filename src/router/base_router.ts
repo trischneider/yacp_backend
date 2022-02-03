@@ -1,5 +1,6 @@
 import {Express, NextFunction, Request, Response} from "express";
 import { User } from "../model/user";
+import * as jwt from "jsonwebtoken";
 
 export type typeCheckFunction = (value: string) => boolean;
 
@@ -32,9 +33,37 @@ export async function requireAuthorization(req: CustomRequest<{}, {}, {user_id: 
     if(!user){
         return res.status(401).send("Invalid user_id or token");
     }
+    try {
+        await verifyToken(req.body.token, user.username);
+    } catch(e){
+        return res.status(401).send(e);
+    }
+   
     req.user = user;
     next();
+
 }
+export function verifyToken(token: string, username: string, isRefreshToken = false): Promise<void>{
+    return new Promise((resolve, reject) => {
+        jwt.verify(token, isRefreshToken ? process.env.REFRESH_TOKEN_KEY : process.env.TOKEN_KEY, (err, decoded) => {
+            if(err){
+                if(err instanceof jwt.TokenExpiredError){
+                    reject("Token expired");
+                    return;
+                } else {
+                    reject("Invalid token");
+                    return;
+                }     
+            }
+            if(decoded.username !== username){
+                reject("Invalid token content");
+                return;
+            }
+            resolve();
+        });
+    });
+}
+
 export type CustomRequest<A,B,C> = Request<A,B,C> & {user?: User};
 export async function requireRefreshTokenAuthorization(req: CustomRequest<{}, {}, {user_id: number, refresh_token: string}>, res: Response, next: NextFunction){
     if(!req.body.user_id || !req.body.refresh_token){
@@ -52,6 +81,12 @@ export async function requireRefreshTokenAuthorization(req: CustomRequest<{}, {}
     if(!user){
         return res.status(401).send("Invalid user_id or refresh_token");
     }
+    try{
+        await verifyToken(req.body.refresh_token, user.username, true);
+    } catch(e) {
+        return res.status(401).send(e);
+    }
+  
     req.user = user;
     next();
 }

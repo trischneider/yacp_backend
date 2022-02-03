@@ -3,12 +3,17 @@ import { initModels } from './model';
 import {Sequelize} from 'sequelize';
 import { json } from 'body-parser';
 import { registerRoutes } from './router';
+import { SocketServer } from './socket/socket_server';
+import * as http from 'http';
 
 export default class Server {
     private app: Express;
+    private socketServer: SocketServer;
+    private server: http.Server;
 
     constructor(){
         this.app = express();
+        this.server = http.createServer(this.app);
         this.app.use(json());
     }
 
@@ -20,8 +25,9 @@ export default class Server {
         try{
             await sequelize.authenticate();
             initModels(sequelize);
-            registerRoutes(this.app, sequelize);
-            this.app.listen(process.env.PORT, () => {
+            this.socketServer = new SocketServer(this.server);
+            registerRoutes(this.app, sequelize, this.socketServer);
+            this.server.listen(process.env.PORT, () => {
                 console.log(`Listening on port ${process.env.PORT}...`);
             });
         } catch(e) {

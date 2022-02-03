@@ -1,13 +1,24 @@
 import { Request, Response } from "express";
 import sequelize from "sequelize";
+import { Express } from "express";
 import { Chat } from "../model/chat";
 import { ChatUser } from "../model/chat_user";
 import { Message } from "../model/message";
 import BaseRouter, { CustomRequest, nonNull, num, requireAuthorization, requireKeysOfType, typeCheck } from "./base_router";
+import { SocketServer } from "../socket/socket_server";
 
 
 export class MessageRouter extends BaseRouter {
+
+    private socketServer: SocketServer;
+
+    constructor(app: Express, socketServer: SocketServer) {
+        super(app);
+        this.socketServer = socketServer;
+    }
+
     protected init(): void {
+        this.createMessage = this.createMessage.bind(this);
         this.app.put("/api/message", requireKeysOfType({
             chat_id: typeCheck(num()),
             content: typeCheck(nonNull())
@@ -33,6 +44,7 @@ export class MessageRouter extends BaseRouter {
             content: req.body.content
         });
         if(message){
+            this.socketServer.onNewMessage(req.user ,message, chatUser);
             res.send(message);
         } else {
             res.status(500).send("Error creating message");
@@ -40,8 +52,6 @@ export class MessageRouter extends BaseRouter {
     }
 
     private async getMessages(req: CustomRequest<{chat_id: number, count: number, from?: number}, {}, {}>, res: Response) {
-
-
         const messages = await Message.findAll({
             where: {
                 chat_id: req.params.chat_id
