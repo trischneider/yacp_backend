@@ -5,14 +5,10 @@ import { json } from 'body-parser';
 import { registerRoutes } from './router';
 import { SocketServer } from './socket/socket_server';
 import * as http from 'http';
-//import * as http from "https";
+import * as https from "https";
 import * as fs from 'fs';
 
 
-/*const options = {
-    key: fs.readFileSync('/etc/letsencrypt/live/tristan-schneider.de/privkey.pem'),
-    cert: fs.readFileSync('/etc/letsencrypt/live/tristan-schneider.de/fullchain.pem')
-};*/
 export default class Server {
     private app: Express;
     private socketServer: SocketServer;
@@ -20,7 +16,15 @@ export default class Server {
 
     constructor(){
         this.app = express();
-        this.server = http.createServer(this.app);
+        if(process.env.NODE_ENV === "production"){
+            const options = {
+                key: fs.readFileSync('/etc/letsencrypt/live/tristan-schneider.de/privkey.pem'),
+                cert: fs.readFileSync('/etc/letsencrypt/live/tristan-schneider.de/fullchain.pem')
+            };
+            this.server = https.createServer(options, this.app);
+        } else {
+            this.server = http.createServer(this.app);
+        }
         this.app.use(json());
     }
 
