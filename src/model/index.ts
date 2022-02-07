@@ -4,6 +4,11 @@ import * as ChatUser from './chat_user';
 import * as Message from './message';
 import * as User from './user';
 
+
+/**
+ * Function to init the database models and associate them
+ * @param sequelize Sequelize instance
+ */
 export function initModels(sequelize: Sequelize){
     const chat = Chat.define(sequelize);
     const chatUser = ChatUser.define(sequelize);

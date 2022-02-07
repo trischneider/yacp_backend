@@ -8,6 +8,10 @@ import { Op } from "sequelize";
 
 
 type CustomSocket = Socket & {user?: User};
+
+/**
+ * Class Handles the socket communication
+ */
 export class SocketServer {
     
     private io: Server;
@@ -22,6 +26,12 @@ export class SocketServer {
         this.io.on("connection", this.socketConnected);
     }
 
+    /**
+     * Sends notifications to in app users when a new message is received from a contact
+     * @param writer 
+     * @param message 
+     * @param writerChatUser 
+     */
     public async onNewMessage(writer: User, message: Message, writerChatUser: ChatUser){
         const otherChatUsers = await ChatUser.findAll({
             where: {
@@ -45,6 +55,12 @@ export class SocketServer {
         });
     }
 
+    /**
+     * Requires a user to be authenticated before allowing the socket to connect
+     * @param socket Socket with a user object attached
+     * @param next Middleware callback
+     * @returns nothing
+     */
     private async authUser(socket: CustomSocket, next: Function){
         if(socket.handshake.query && socket.handshake.query.token && socket.handshake.query.user_id){
             const token = socket.handshake.query.token;

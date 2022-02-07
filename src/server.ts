@@ -17,6 +17,9 @@ export default class Server {
         this.app.use(json());
     }
 
+    /**
+     * Creates the database connection, initializes the socketserver and the express server
+     */
     public async listen(){
         const sequelize = new Sequelize(process.env.DB_DATABASE, process.env.DB_USER, process.env.DB_PASSWORD, {
             host: process.env.DB_HOST,

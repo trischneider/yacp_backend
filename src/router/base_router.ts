@@ -4,7 +4,12 @@ import * as jwt from "jsonwebtoken";
 
 export type typeCheckFunction = (value: string) => boolean;
 
-
+/**
+ * Function to check if a request has the required arguments
+ * @param types The types of arguments that the request should have
+ * @param param Are the params in the body or in the url
+ * @returns 
+ */
 export function requireKeysOfType(types: {[key: string]: TypeCheck}, param = false){
     return (req: Request, res: Response, next: NextFunction) => {
         for(let key in types){
@@ -20,6 +25,14 @@ export function requireKeysOfType(types: {[key: string]: TypeCheck}, param = fal
         next();
     }
 }
+
+/**
+ * Function to check if the request issuer is authorized
+ * @param req express request
+ * @param res express response
+ * @param next express next
+ * @returns Error or undefined
+ */
 export async function requireAuthorization(req: CustomRequest<{}, {}, {user_id: number, token: string}>, res: Response, next: NextFunction){
     if(!req.body.user_id || !req.body.token){
         return res.status(400).send("Missing required key: user_id or token");
@@ -43,6 +56,14 @@ export async function requireAuthorization(req: CustomRequest<{}, {}, {user_id: 
     next();
 
 }
+
+/**
+ * Function to check if a jwt token is valid
+ * @param token The jwt token
+ * @param username The username which is being compared to the one stored in the jwt token
+ * @param isRefreshToken Specifies whether the token is a refresh token or a normal auth token
+ * @returns Promise with status
+ */
 export function verifyToken(token: string, username: string, isRefreshToken = false): Promise<void>{
     return new Promise((resolve, reject) => {
         jwt.verify(token, isRefreshToken ? process.env.REFRESH_TOKEN_KEY : process.env.TOKEN_KEY, (err, decoded) => {
@@ -65,6 +86,10 @@ export function verifyToken(token: string, username: string, isRefreshToken = fa
 }
 
 export type CustomRequest<A,B,C> = Request<A,B,C> & {user?: User};
+
+/**
+ * Checks if the request has a valid json web token
+ */
 export async function requireRefreshTokenAuthorization(req: CustomRequest<{}, {}, {user_id: number, refresh_token: string}>, res: Response, next: NextFunction){
     if(!req.body.user_id || !req.body.refresh_token){
         return res.status(400).send("Missing required key: user_id or refresh_token");
@@ -101,6 +126,9 @@ export default abstract class BaseRouter {
     protected abstract init(): void;
 }
 
+/**
+ * TypeCheck class which contains all typechecks
+ */
 export class TypeCheck {
     private checks: typeCheckFunction[] = [];
 
@@ -115,6 +143,9 @@ export class TypeCheck {
         return this.checks;
     }
 }
+/*
+    ----------------------- Validation Functions -----------------------
+*/
 export function typeCheck(func: typeCheckFunction){
     return new TypeCheck(func);
 }
@@ -143,4 +174,12 @@ export function boolean(){
 const mailRegex = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 export function mail(){
     return (value: string) => value && value.match(mailRegex) !== null;
+}
+const usernameRegex = /^[A-Za-z0-9_-]{3,16}$/;
+export function username(){
+    return (value: string) => value && value.match(usernameRegex) !== null;
+}
+const nameExpression = /^[A-Z][-'a-zA-Z]+,?\s[A-Z][-'a-zA-Z]{1,19}$/;
+export function name(){
+    return (value: string) => value && value.match(nameExpression) !== null;
 }

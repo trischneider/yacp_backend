@@ -5,6 +5,9 @@ import { ChatUser } from "../model/chat_user";
 import { Sequelize } from "sequelize";
 import { QueryTypes } from "sequelize";
 
+/*
+* Query string getting chats
+*/
 const getQuery = `SELECT id, name, last_message_date, last_message_user, content FROM Chats AS Chat INNER JOIN ChatUsers AS ChatUser ON Chat.id = ChatUser.chat_id LEFT JOIN 
     (SELECT content, 
         (SELECT username FROM Users WHERE id = LMessage.user_id) AS last_message_user, updatedAt as last_message_date, chat_id FROM Messages AS LMessage ORDER BY createdAt DESC LIMIT 1) 

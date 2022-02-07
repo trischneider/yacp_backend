@@ -1,5 +1,6 @@
 import { Model, Sequelize, ModelStatic, DataTypes } from "sequelize";
 
+
 export class Chat extends Model {
     declare id: number;
     declare name: string;

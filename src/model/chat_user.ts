@@ -1,6 +1,9 @@
 import { Model, Sequelize, ModelStatic, DataTypes, HasManyGetAssociationsMixin } from "sequelize";
 import { Chat } from "./chat";
 
+/**
+ * Model to connect chats and users
+ */
 export class ChatUser extends Model {
     declare chat_id: number;
     declare user_id: number;

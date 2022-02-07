@@ -1,4 +1,4 @@
-import BaseRoute, {minLength, requireKeysOfType, mail, typeCheck, nonNull, CustomRequest, requireRefreshTokenAuthorization, num, requireAuthorization} from "./base_router";
+import BaseRoute, {minLength, requireKeysOfType, mail, typeCheck, nonNull, CustomRequest, requireRefreshTokenAuthorization, num, requireAuthorization, username, name} from "./base_router";
 import { Express, Request, Response } from "express";
 import { Op } from "sequelize";
 import { User } from "../model/user";
@@ -6,11 +6,11 @@ import * as bcrypt from "bcrypt";
 import * as jwt from "jsonwebtoken";
 
 const userCreationTypes =  {
-    username: typeCheck(minLength(3)),
+    username: typeCheck(username()),
     password: typeCheck(minLength(6)),
     email: typeCheck(mail()),
-    first_name: typeCheck(minLength(1)),
-    last_name: typeCheck(minLength(1))
+    first_name: typeCheck(name()),
+    last_name: typeCheck(name())
 }
 interface userCreationBodyParams {
     username: string;
@@ -40,11 +40,13 @@ export class UserRouter extends BaseRoute {
             searchTerm: typeCheck(minLength(1))
         }, true), this.searchUser)
     }
+
     private generateToken(username: string){
         const token = jwt.sign({username}, process.env.TOKEN_KEY, {expiresIn: "5h"});
         const refreshToken = jwt.sign({username}, process.env.REFRESH_TOKEN_KEY, {expiresIn: "30d"});
         return {token, refreshToken}
     }
+    
     private async createUser(req: Request<{}, {}, userCreationBodyParams>, res: Response ){
         const hash = await bcrypt.hash(req.body.password, 10);
         const oldUser = await User.findOne({where: {
@@ -85,6 +87,7 @@ export class UserRouter extends BaseRoute {
         await user.update({token, refresh_token: refreshToken});
         res.send({token, refresh_token: refreshToken, user_id: user.id});
     }
+
     private async refreshToken(req: CustomRequest<{}, {}, {refresh_token: string; user_id: number}>, res: Response){
         const user = await User.findOne({where: {id: req.body.user_id}});
         if(!user)
@@ -95,6 +98,7 @@ export class UserRouter extends BaseRoute {
         await user.update({token});
         res.send({token});
     }
+    
     private async searchUser(req: CustomRequest<{searchTerm: string}, {}, {}>, res: Response){
         const users = await User.findAll({
             where: {
