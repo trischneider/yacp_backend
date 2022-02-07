@@ -179,7 +179,12 @@ const usernameRegex = /^[A-Za-z0-9_-]{3,16}$/;
 export function username(){
     return (value: string) => value && value.match(usernameRegex) !== null;
 }
-const nameExpression = /^[A-Z][-'a-zA-Z]+,?\s[A-Z][-'a-zA-Z]{1,19}$/;
-export function name(){
-    return (value: string) => value && value.match(nameExpression) !== null;
+
+const firstNameExpression = /^[A-Z][-'a-zA-Z]+$/;
+const lastNameExpression = /^[A-Z][-'a-zA-Z]{1,19}$/;
+export function firstName(){
+    return (value: string) => value && value.match(firstNameExpression) !== null;
+}
+export function lastName(){
+    return (value: string) => value && value.match(lastNameExpression) !== null;
 }

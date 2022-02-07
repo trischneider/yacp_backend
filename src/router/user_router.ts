@@ -1,4 +1,4 @@
-import BaseRoute, {minLength, requireKeysOfType, mail, typeCheck, nonNull, CustomRequest, requireRefreshTokenAuthorization, num, requireAuthorization, username, name} from "./base_router";
+import BaseRoute, {minLength, requireKeysOfType, mail, typeCheck, nonNull, CustomRequest, requireRefreshTokenAuthorization, num, requireAuthorization, username, firstName, lastName} from "./base_router";
 import { Express, Request, Response } from "express";
 import { Op } from "sequelize";
 import { User } from "../model/user";
@@ -9,8 +9,8 @@ const userCreationTypes =  {
     username: typeCheck(username()),
     password: typeCheck(minLength(6)),
     email: typeCheck(mail()),
-    first_name: typeCheck(name()),
-    last_name: typeCheck(name())
+    first_name: typeCheck(minLength(1)),
+    last_name: typeCheck(minLength(1)),
 }
 interface userCreationBodyParams {
     username: string;
