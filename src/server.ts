@@ -7,6 +7,7 @@ import { SocketServer } from './socket/socket_server';
 import * as http from 'http';
 import * as https from "https";
 import * as fs from 'fs';
+import applyCORS from './router/cors_middleware';
 
 
 export default class Server {
@@ -25,7 +26,9 @@ export default class Server {
         } else {
             this.server = http.createServer(this.app);
         }
+        this.app.use(applyCORS);
         this.app.use(json());
+
     }
 
     /**
