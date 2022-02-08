@@ -32,7 +32,7 @@ export class UserRouter extends BaseRoute {
 
         this.app.put("/api/user", requireKeysOfType(userCreationTypes), this.createUser);
         this.app.post("/api/user/login", requireKeysOfType({
-            user_id: typeCheck(num()),
+            username: typeCheck(username()),
             password: typeCheck(nonNull())
         }), this.loginUser);
         this.app.post("/api/user/refresh", requireRefreshTokenAuthorization, this.refreshToken);
@@ -74,8 +74,8 @@ export class UserRouter extends BaseRoute {
         else
             res.status(400).send({error: "User already exists"});
     }
-    private async loginUser(req: Request<{}, {}, {user_id: number; password: string;}>, res: Response){
-        const user = await User.findOne({where: {id: req.body.user_id}});
+    private async loginUser(req: Request<{}, {}, {username: string; password: string;}>, res: Response){
+        const user = await User.findOne({where: {username: req.body.username}});
         if(!user){
             return res.status(400).send("User does not exist");
         }
