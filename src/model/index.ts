@@ -27,5 +27,18 @@ export function initModels(sequelize: Sequelize){
     user.hasMany(message, {foreignKey: 'user_id'});
     message.belongsTo(user, {foreignKey: 'user_id'});
 
-    sequelize.sync().then(() => console.log("successfully connected to database"))
+    sequelize.sync().then(() => {
+        Chat.Chat.findOrCreate({
+            where: {
+                id: 1,
+            },
+            defaults: {
+                id: 1,
+                name: "General",
+            }
+        })
+        console.log("successfully connected to database")
+    })
+
+
 }

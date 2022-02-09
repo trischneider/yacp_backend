@@ -4,7 +4,7 @@ import { Model, Sequelize, ModelStatic, DataTypes } from "sequelize";
 export class Chat extends Model {
     declare id: number;
     declare name: string;
-    declare created_at: Date;
+    declare createdAt: Date;
 }
 export function define(sequelize: Sequelize): ModelStatic<Chat> {
     return Chat.init({

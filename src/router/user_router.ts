@@ -4,6 +4,7 @@ import { Op } from "sequelize";
 import { User } from "../model/user";
 import * as bcrypt from "bcrypt";
 import * as jwt from "jsonwebtoken";
+import { ChatUser } from "../model/chat_user";
 
 const userCreationTypes =  {
     username: typeCheck(username()),
@@ -69,6 +70,11 @@ export class UserRouter extends BaseRoute {
             token,
             refresh_token: refreshToken
         });
+        await ChatUser.create({
+            user_id: user.id,
+            chat_id: 1,
+            is_admin: false
+        });
         if(user)
             res.send({token, refresh_token: refreshToken, user_id: user.id});
         else
@@ -94,9 +100,9 @@ export class UserRouter extends BaseRoute {
             return res.status(400).send("User does not exist");
         if(req.body.refresh_token !== user.refresh_token)
             return res.status(400).send("Invalid refresh token");
-        const token = jwt.sign({username: user.username}, process.env.TOKEN_KEY, {expiresIn: "5h"});
-        await user.update({token});
-        res.send({token});
+        const token = this.generateToken(user.username);
+        await user.update({token: token.token, refresh_token: token.refreshToken});
+        res.send({...token, user_id: user.id});
     }
     
     private async searchUser(req: CustomRequest<{searchTerm: string}, {}, {}>, res: Response){

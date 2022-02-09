@@ -33,21 +33,26 @@ export function requireKeysOfType(types: {[key: string]: TypeCheck}, param = fal
  * @param next express next
  * @returns Error or undefined
  */
-export async function requireAuthorization(req: CustomRequest<{}, {}, {user_id: number, token: string}>, res: Response, next: NextFunction){
-    if(!req.body.user_id || !req.body.token){
-        return res.status(400).send("Missing required key: user_id or token");
+export async function requireAuthorization(req: CustomRequest<{}, {}, {}>, res: Response, next: NextFunction){
+    const token = req.headers['bearer-token'];
+    const userId = parseInt(req.headers['user'] as string)
+    if(!token || !userId){
+        return res.status(400).send("Missing authorization header");
+    }
+    if(isNaN(userId)){
+        return res.status(400).send("Invalid user_id");
     }
     const user = await User.findOne({
         where: {
-            id: req.body.user_id,
-            token: req.body.token
+            id: userId,
+            token: token
         }
     })
     if(!user){
         return res.status(401).send("Invalid user_id or token");
     }
     try {
-        await verifyToken(req.body.token, user.username);
+        await verifyToken(token as string, user.username);
     } catch(e){
         return res.status(401).send(e);
     }
@@ -90,24 +95,26 @@ export type CustomRequest<A,B,C> = Request<A,B,C> & {user?: User};
 /**
  * Checks if the request has a valid json web token
  */
-export async function requireRefreshTokenAuthorization(req: CustomRequest<{}, {}, {user_id: number, refresh_token: string}>, res: Response, next: NextFunction){
-    if(!req.body.user_id || !req.body.refresh_token){
-        return res.status(400).send("Missing required key: user_id or refresh_token");
+export async function requireRefreshTokenAuthorization(req: CustomRequest<{}, {}, {refresh_token: string, user_id: number}>, res: Response, next: NextFunction){
+    const refreshToken = req.body.refresh_token;
+    const userId = req.body.user_id;
+    if(!userId || !refreshToken){
+        return res.status(400).send("Missing refresh_token or user_id");
     }
-    if(isNaN(req.body.user_id)){
+    if(isNaN(userId)){
         return res.status(400).send("Invalid user_id");
     }
     const user = await User.findOne({
         where: {
-            id: req.body.user_id,
-            refresh_token: req.body.refresh_token
+            id: userId,
+            refresh_token: refreshToken
         }
     })
     if(!user){
         return res.status(401).send("Invalid user_id or refresh_token");
     }
     try{
-        await verifyToken(req.body.refresh_token, user.username, true);
+        await verifyToken(refreshToken, user.username, true);
     } catch(e) {
         return res.status(401).send(e);
     }
