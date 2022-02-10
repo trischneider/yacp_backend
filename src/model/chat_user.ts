@@ -27,6 +27,7 @@ export function define(sequelize: Sequelize): ModelStatic<ChatUser> {
         is_admin: {
             type: DataTypes.BOOLEAN,
             defaultValue: false,
+            allowNull: false,
         },
     }, {sequelize, modelName: 'chatuser'});
 }

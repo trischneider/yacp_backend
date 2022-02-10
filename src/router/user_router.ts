@@ -102,7 +102,7 @@ export class UserRouter extends BaseRoute {
             return res.status(400).send("Invalid refresh token");
         const token = this.generateToken(user.username);
         await user.update({token: token.token, refresh_token: token.refreshToken});
-        res.send({...token, user_id: user.id});
+        res.send({token: token.token, refresh_token: token.refreshToken, user_id: user.id});
     }
     
     private async searchUser(req: CustomRequest<{searchTerm: string}, {}, {}>, res: Response){

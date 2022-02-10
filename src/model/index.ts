@@ -35,6 +35,7 @@ export function initModels(sequelize: Sequelize){
             defaults: {
                 id: 1,
                 name: "General",
+                is_group: true,
             }
         })
         console.log("successfully connected to database")
