@@ -54,7 +54,7 @@ export async function requireAuthorization(req: CustomRequest<{}, {}, {}>, res: 
     try {
         await verifyToken(token as string, user.username);
     } catch(e){
-        return res.status(401).send(e);
+        return res.status(401).send("Token invalid");
     }
    
     req.user = user;

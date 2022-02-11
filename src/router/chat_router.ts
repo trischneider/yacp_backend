@@ -2,22 +2,23 @@ import BaseRouter, { CustomRequest, requireAuthorization, requireKeysOfType, typ
 import {Express, Response } from "express";
 import { Chat } from "../model/chat";
 import { ChatUser } from "../model/chat_user";
-import { Sequelize } from "sequelize";
+import { Message } from "../model/message";
+import { Op, Sequelize } from "sequelize";
 import { QueryTypes } from "sequelize";
+import { User } from "../model/user";
+import { where } from "sequelize";
 
 /*
 * Query string getting chats
 */
-const getQuery = `SELECT id, if(is_group, name, (SELECT username FROM Users u INNER JOIN chatusers c ON c.user_id = u.id WHERE c.chat_id = Chat.id AND u.id != ChatUser.user_id)) as name
-, last_message_date, last_message_user, last_message, is_group FROM Chats AS Chat INNER JOIN chatusers AS ChatUser ON Chat.id = ChatUser.chat_id LEFT JOIN 
-    (SELECT content AS last_message, 
-        (SELECT username FROM Users WHERE id = LMessage.user_id) AS last_message_user, updatedAt as last_message_date, chat_id FROM Messages AS LMessage ORDER BY createdAt DESC LIMIT 1) 
-AS Message ON Message.chat_id = ChatUser.chat_id WHERE ChatUser.user_id = ?;
-`
 
 const verifyExistence = `SELECT * FROM
- (SELECT c.chat_id  FROM ChatUsers c INNER JOIN ChatUsers ca ON c.chat_id = ca.chat_id WHERE c.user_id = ? AND ca.user_id = ?) as result 
+ (SELECT c.chat_id  FROM chatusers c INNER JOIN chatusers ca ON c.chat_id = ca.chat_id WHERE c.user_id = ? AND ca.user_id = ?) as result 
  INNER JOIN Chats as chat ON chat.id = result.chat_id WHERE is_group = 0;`;
+
+ const additionalUsernameQuery = `if(is_group, name, (
+     SELECT concat(first_name, " ", last_name) FROM Users u INNER JOIN chatusers c
+    ON c.user_id = u.id WHERE c.chat_id = Chat.id AND u.id != chatusers.user_id))`;
 
 export class ChatRouter extends BaseRouter {
 
@@ -80,9 +81,42 @@ export class ChatRouter extends BaseRouter {
     }
     
     private async getChats(req: CustomRequest<{}, {}, {}>, res: Response) {
-        const results = await this.sequelize.query(getQuery, {
-            replacements: [req.user.id],
-            type: QueryTypes.SELECT
+        const chats = await Chat.findAll({
+            raw: true,
+            include: {
+                model: ChatUser,
+                where: {
+                    user_id: req.user.id
+                },
+            },
+            attributes: {
+                include: [
+                    [Sequelize.literal(additionalUsernameQuery), 'chat_name']
+                ]
+            }
+        }) as (Chat & {chat_name: string})[];
+        const messages = await Message.findAll({
+            where: {
+                chat_id: {
+                    [Op.in]: chats.map((chat) => chat.id)
+                }
+            },
+            include: {
+                model: User,
+            },
+            order: [["createdAt", "DESC"]],
+        })
+        const results = chats.map((chat) => {
+            const lastMessage  = messages.find((message: Message) => message.chat_id === chat.id);
+            const lastMessageUser = lastMessage && lastMessage.User && (lastMessage.User.first_name + " " + lastMessage.User.last_name);
+            return {
+                id: chat.id,
+                name: chat.chat_name,
+                last_message_date: lastMessage?.createdAt,
+                last_message_user: lastMessageUser,
+                last_message: lastMessage?.content,
+                is_group: chat.is_group
+            };
         });
         res.send(results);
     }
@@ -96,7 +130,7 @@ export class ChatRouter extends BaseRouter {
         if(!chatUser)
             return res.status(400).send("You are not a member of this chat");
         await chatUser.destroy();
-        res.send("Successfully deleted chat");
+        res.sendStatus(201);
     }
     
 }

@@ -20,7 +20,9 @@ export class SocketServer {
     constructor(server: HttpServer){
         this.socketConnected = this.socketConnected.bind(this);
         this.io = new Server(server, {
-
+            cors: {
+                origin: '*',
+            },
         });
         this.io.use(this.authUser);
         this.io.on("connection", this.socketConnected);
@@ -45,11 +47,13 @@ export class SocketServer {
             const socket = this.connectedSockets[chatUser.user_id];
             if(socket){
                 socket.emit("new_message", {
-                    messageContent: message.content, 
-                    messageDate: message.createdAt, 
-                    fromUserName: writer.username, 
-                    fromUserId: writer.id,
-                    chat_id: writerChatUser.chat_id
+                    id: message.id,
+                    content: message.content, 
+                    timestamp: message.createdAt, 
+                    is_sender: false,
+                    user_id: writer.id,
+                    full_name: writer.first_name + " " + writer.last_name,
+                    chat_id: message.chat_id
                 });
             } 
         });

@@ -45,23 +45,27 @@ export class MessageRouter extends BaseRouter {
         });
         if(message){
             this.socketServer.onNewMessage(req.user ,message, chatUser);
-            res.send(message);
+            res.send({
+                id: message.id,
+                content: message.content,
+                timestamp: message.createdAt,
+                is_sender: true,
+                user_id: req.user.id,
+                full_name: req.user.first_name + " " + req.user.last_name
+            });
         } else {
             res.status(500).send("Error creating message");
         }
     }
 
     private async getMessages(req: CustomRequest<{chat_id: number, count: number, from?: number}, {}, {}>, res: Response) {
-        const messages = await Message.findAll({
+        const messages: any[] = await Message.findAll({
+            raw: true,
             where: {
                 chat_id: req.params.chat_id
             },
-            attributes: {
-                exclude: ["chat_id", "updatedAt", "id", "user_id"],
-                include: [
-                    [sequelize.literal("(SELECT username FROM Users WHERE id = " + req.user.id + ")"), "username"]
-                ]
-            },
+            attributes: ['id', 'content', 'createdAt', 'user_id',
+                [sequelize.literal("(SELECT coalesce(concat(first_name, ' ',last_name)) FROM Users WHERE id = " + req.user.id + ")"), "full_name"]],
             include: [{
                 model: Chat,
                 required: true,
@@ -80,7 +84,15 @@ export class MessageRouter extends BaseRouter {
             offset: Number(req.params.from) || 0
         })
         if(messages){
-            res.send(messages);
+            const response = messages.map(elem => ({
+                    id: elem.id,
+                    content: elem.content, 
+                    timestamp: elem.createdAt, 
+                    is_sender: elem.user_id === req.user.id,
+                    user_id: elem.user_id,
+                    full_name: elem.full_name
+            }));
+            res.send(response);
         } else {
             res.status(500).send("Error getting messages");
         }

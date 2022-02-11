@@ -7,7 +7,7 @@ export class Chat extends Model {
     declare name: string;
     declare is_group: boolean;
     declare createdAt: Date;
-    declare chatUsers: ChatUser[];
+    declare chatusers: ChatUser[];
 }
 export function define(sequelize: Sequelize): ModelStatic<Chat> {
     return Chat.init({
