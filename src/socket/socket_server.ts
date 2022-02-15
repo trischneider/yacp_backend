@@ -47,7 +47,7 @@ export class SocketServer {
                     id: message.id,
                     content: message.content, 
                     timestamp: message.createdAt, 
-                    is_sender: false,
+                    is_sender: writer.id === chatUser.user_id,
                     user_id: writer.id,
                     full_name: writer.first_name + " " + writer.last_name,
                     chat_id: message.chat_id
