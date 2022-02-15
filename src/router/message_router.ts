@@ -65,7 +65,7 @@ export class MessageRouter extends BaseRouter {
                 chat_id: req.params.chat_id
             },
             attributes: ['id', 'content', 'createdAt', 'user_id',
-                [sequelize.literal("(SELECT coalesce(concat(first_name, ' ',last_name)) FROM Users WHERE id = " + req.user.id + ")"), "full_name"]],
+                [sequelize.literal("(SELECT coalesce(concat(first_name, ' ',last_name)) FROM Users WHERE id = user_id)"), "full_name"]],
             include: [{
                 model: Chat,
                 required: true,
