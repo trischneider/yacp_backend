@@ -35,15 +35,12 @@ export class SocketServer {
      * @param writerChatUser 
      */
     public async onNewMessage(writer: User, message: Message, writerChatUser: ChatUser){
-        const otherChatUsers = await ChatUser.findAll({
+        const chatUsers = await ChatUser.findAll({
             where: {
                 chat_id: writerChatUser.chat_id,
-                user_id: {
-                    [Op.not]: writer.id
-                }
             }
         });
-        otherChatUsers.forEach(async (chatUser) => {
+        chatUsers.forEach(async (chatUser) => {
             const socket = this.connectedSockets[chatUser.user_id];
             if(socket){
                 socket.emit("new_message", {
